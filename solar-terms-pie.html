@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The 24 Solar Terms · 二十四节气</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: linear-gradient(135deg, #eafaf1 0%, #e3f2fd 50%, #fffde7 100%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  header { text-align: center; margin-top: 28px; }
+  h1 {
+    font-size: 30px;
+    color: #2e7d32;
+    letter-spacing: 2px;
+  }
+  h1 span { color: #1565c0; }
+  p.subtitle {
+    margin-top: 8px;
+    color: #6b8e7b;
+    font-size: 15px;
+  }
+  #chart {
+    width: min(880px, 94vw);
+    height: 640px;
+    margin-top: 6px;
+  }
+  .tip {
+    margin: 6px 0 30px;
+    color: #557a68;
+    font-size: 13px;
+    background: rgba(255,255,255,.7);
+    padding: 8px 18px;
+    border-radius: 20px;
+  }
+</style>
+</head>
+<body>
+  <header>
+    <h1>🌸 The 24 <span>Solar Terms</span> ☀️❄️</h1>
+    <p class="subtitle">Four Seasons &amp; 二十四节气 · Hover the outer ring to learn each term in English!</p>
+  </header>
+
+  <div id="chart"></div>
+
+  <div class="tip">💡 将鼠标悬停在外圈的彩色小扇形上，即可查看每个节气的英文名与中文对照；悬停内圈可查看季节。</div>
+
+<script>
+// 24 solar terms grouped by season
+const seasons = [
+  {
+    name: 'Spring', value: 6, color: '#66bb6a',
+    terms: [
+      { en: 'Start of Spring',      zh: '立春' },
+      { en: 'Rain Water',           zh: '雨水' },
+      { en: 'Awakening of Insects', zh: '惊蛰' },
+      { en: 'Spring Equinox',       zh: '春分' },
+      { en: 'Pure Brightness',      zh: '清明' },
+      { en: 'Grain Rain',           zh: '谷雨' }
+    ]
+  },
+  {
+    name: 'Summer', value: 6, color: '#ef5350',
+    terms: [
+      { en: 'Start of Summer',  zh: '立夏' },
+      { en: 'Grain Buds',       zh: '小满' },
+      { en: 'Grain in Ear',     zh: '芒种' },
+      { en: 'Summer Solstice',  zh: '夏至' },
+      { en: 'Minor Heat',       zh: '小暑' },
+      { en: 'Major Heat',       zh: '大暑' }
+    ]
+  },
+  {
+    name: 'Autumn', value: 6, color: '#fdd835',
+    terms: [
+      { en: 'Start of Autumn', zh: '立秋' },
+      { en: 'End of Heat',     zh: '处暑' },
+      { en: 'White Dew',       zh: '白露' },
+      { en: 'Autumn Equinox',  zh: '秋分' },
+      { en: 'Cold Dew',        zh: '寒露' },
+      { en: "Frost's Descent", zh: '霜降' }
+    ]
+  },
+  {
+    name: 'Winter', value: 6, color: '#42a5f5',
+    terms: [
+      { en: 'Start of Winter', zh: '立冬' },
+      { en: 'Minor Snow',      zh: '小雪' },
+      { en: 'Major Snow',      zh: '大雪' },
+      { en: 'Winter Solstice', zh: '冬至' },
+      { en: 'Minor Cold',      zh: '小寒' },
+      { en: 'Major Cold',      zh: '大寒' }
+    ]
+  }
+];
+
+// Inner ring: 4 equal seasons
+const innerData = seasons.map(s => ({
+  name: s.name, value: 1, itemStyle: { color: s.color }
+}));
+
+// Outer ring: 24 terms, lighter shades of each season color
+function lighten(hex, percent) {
+  const n = parseInt(hex.slice(1), 16);
+  const r = Math.min(255, (n >> 16) + Math.round(2.55 * percent));
+  const g = Math.min(255, ((n >> 8) & 0xff) + Math.round(2.55 * percent));
+  const b = Math.min(255, (n & 0xff) + Math.round(2.55 * percent));
+  return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+}
+
+const outerData = [];
+seasons.forEach((s, si) => {
+  s.terms.forEach((t, ti) => {
+    outerData.push({
+      name: t.en,
+      value: 1,
+      zh: t.zh,
+      season: s.name,
+      itemStyle: {
+        color: lighten(s.color, ti * 4),
+        borderColor: '#ffffff',
+        borderWidth: 2
+      }
+    });
+  });
+});
+
+const chart = echarts.init(document.getElementById('chart'));
+
+chart.setOption({
+  title: {
+    text: 'Four Seasons & the 24 Solar Terms',
+    subtext: '四季 · 二十四节气',
+    left: 'center',
+    top: 10,
+    textStyle: { color: '#33691e', fontSize: 22, fontWeight: 'bold' },
+    subtextStyle: { color: '#888', fontSize: 14 }
+  },
+  tooltip: {
+    trigger: 'item',
+    backgroundColor: 'rgba(255,255,255,0.96)',
+    borderColor: '#a5d6a7',
+    textStyle: { color: '#33691e', fontSize: 14 },
+    formatter: p => p.data.zh
+      ? `<b style="font-size:16px">${p.data.name}</b> (${p.data.zh})<br/>Season: ${p.data.season}`
+      : `<b style="font-size:16px">${p.data.name}</b> 🍃`
+  },
+  legend: { show: false },
+  series: [
+    {
+      // Inner ring: seasons
+      name: 'Seasons',
+      type: 'pie',
+      radius: ['26%', '44%'],
+      center: ['50%', '56%'],
+      label: {
+        formatter: '{b}',
+        fontSize: 17,
+        fontWeight: 'bold',
+        color: '#fff'
+      },
+      labelLine: { show: false },
+      emphasis: {
+        scale: true,
+        scaleSize: 6,
+        itemStyle: { shadowBlur: 12, shadowColor: 'rgba(0,0,0,0.25)' }
+      },
+      data: innerData
+    },
+    {
+      // Outer ring: 24 solar terms
+      name: 'Solar Terms',
+      type: 'pie',
+      radius: ['52%', '74%'],
+      center: ['50%', '56%'],
+      padAngle: 1.5,
+      label: {
+        formatter: p => `${p.data.zh}\n{en|${p.name}}`,
+        rich: {
+          en: { fontSize: 11, color: '#777', padding: [2, 0, 0, 0] }
+        },
+        color: '#555',
+        fontSize: 13,
+        lineHeight: 17
+      },
+      labelLine: {
+        length: 12,
+        length2: 14,
+        lineStyle: { color: '#aaa' }
+      },
+      emphasis: {
+        scale: true,
+        scaleSize: 8,
+        itemStyle: {
+          shadowBlur: 15,
+          shadowColor: 'rgba(0,0,0,0.3)',
+          borderColor: '#fff'
+        }
+      },
+      data: outerData
+    }
+  ]
+});
+
+window.addEventListener('resize', () => chart.resize());
+</script>
+</body>
+</html>
